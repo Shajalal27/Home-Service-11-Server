@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000
 
@@ -10,7 +10,7 @@ const app = express()
 
 //midleware
 const corsOptions ={
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 'http://localhost:5000'],
     Credentials:true,
     optionSuccessStatus: 200,
 
@@ -43,7 +43,12 @@ async function run() {
         res.send(result)
     })
 
-
+    app.get('/service/:id', async (req, res) =>{
+        const id = req.params.id
+        const query = {_id: new ObjectId(id)}
+        const result = await servicesCollection.findOne(query)
+        res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
