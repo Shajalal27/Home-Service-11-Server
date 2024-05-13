@@ -37,7 +37,7 @@ async function run() {
     
     const servicesCollection = client.db('HomeService').collection('populerService')
     const booksCollection = client.db('HomeService').collection('book')
-    
+
     //get all service data from db
     app.get('/service', async(req, res) =>{
         const result = await servicesCollection.find().toArray()
@@ -49,6 +49,13 @@ async function run() {
         const query = {_id: new ObjectId(id)}
         const result = await servicesCollection.findOne(query)
         res.send(result)
+    })
+
+    //save a book data 
+    app.post('/book', async (req, res) =>{
+      const bookData = req.body;
+      const result = await booksCollection.insertOne(bookData)
+      res.send(result)
     })
 
     // Send a ping to confirm a successful connection
