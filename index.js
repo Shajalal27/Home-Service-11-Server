@@ -47,8 +47,22 @@ async function run() {
     app.get('/service/:id', async (req, res) =>{
         const id = req.params.id
         const query = {_id: new ObjectId(id)}
+        // const options ={
+        //       projection: {title: 1, price: 1, service_id: 1, img: 1}
+        // };
         const result = await servicesCollection.findOne(query)
         res.send(result)
+    })
+
+    //booking
+    app.get('/book', async (req, res) =>{
+      console.log(req.query.email)
+      let query = {};
+      if(req.query?.email){
+        query = {email: req.query.email}
+      }
+      const result = await booksCollection.find().toArray();
+      res.send(result)
     })
 
     //save a book data 
@@ -62,6 +76,13 @@ async function run() {
     app.post('/add', async (req, res) =>{
       const addData = req.body;
       const result = await servicesCollection.insertOne(addData)
+      res.send(result)
+    })
+
+    app.delete('/service/:id', async (req, res) =>{
+      const id = req.params.id
+      const query ={_id: new ObjectId(id)}
+      const result = await servicesCollection.deleteOne(query)
       res.send(result)
     })
 
