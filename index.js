@@ -79,6 +79,20 @@ async function run() {
       res.send(result)
     })
 
+    app.put('/service/:id', async (req, res) =>{
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id)}
+      const updateData = req.body
+      const options ={upsert: true}
+      const updateDoc ={
+          $set:{
+            ...updateData,
+          },
+      };
+      const result = await servicesCollection.updateOne(filter, updateDoc, options)
+      res.send(result)
+    })
+
     app.delete('/service/:id', async (req, res) =>{
       const id = req.params.id
       const query ={_id: new ObjectId(id)}
