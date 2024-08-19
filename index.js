@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const port = process.env.PORT || 5000
@@ -9,14 +10,14 @@ const app = express()
 
 
 //midleware
-const corsOptions ={
-    origin: ['http://localhost:5173', 'http://localhost:5000'],
-    Credentials:true,
-    optionSuccessStatus: 200,
+// const corsOptions ={
+//     origin: ['http://localhost:5173', 'https://crud-and-jwt-operation.web.app',],
+//     Credentials:true,
+//     optionSuccessStatus: 200,
 
-}
+// }
 
-app.use(cors(corsOptions))
+app.use(cors())
 app.use(express.json())
 
 
@@ -38,6 +39,13 @@ async function run() {
     const servicesCollection = client.db('HomeService').collection('populerService')
     const booksCollection = client.db('HomeService').collection('book')
 
+  //auth related api
+   app.post('/jwt', async(req, res) =>{
+    const user = req.body;
+    console.log(user)
+    res.send(user)
+   } )
+   
     //get all service data from db
     app.get('/service', async(req, res) =>{
         const result = await servicesCollection.find().toArray()
@@ -66,7 +74,7 @@ async function run() {
     })
 
     //save a book data 
-    app.post('/book', async (req, res) =>{
+    app.post('/books', async (req, res) =>{
       const bookData = req.body;
       const result = await booksCollection.insertOne(bookData)
       res.send(result)
@@ -93,6 +101,45 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/book/:email', async (req, res) =>{
+      const email = req.params.email
+      const query = {email}
+      const result = await booksCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    //get all booked service
+    app.get('/booked/:email', async (req, res) =>{
+      const email = req.params.email
+      const query = {'service_provider.provider_email' : email}
+      const result = await booksCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    //pagination
+    app.get('services/', async (req, res) =>{
+      const {page = 1, limit = 10, search = ''} = req.query;
+      try{
+        const services = await Service.find({
+          serviceName:{$regex: search, $options: 'i'}
+        })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .exec();
+
+        const count = await Service.countDocuments({
+          serviceName:{$regex: search, $options: 'i'}
+        });
+        res.json({
+          services,
+          totalPages: Math.ceil(count / limit),
+          currentPage: parseInt(page)
+        });
+      } catch (error){
+        res.status(5000).json({message: 'Error fetching servises'})
+      }
+    });
+
     app.delete('/service/:id', async (req, res) =>{
       const id = req.params.id
       const query ={_id: new ObjectId(id)}
@@ -101,7 +148,7 @@ async function run() {
     })
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
